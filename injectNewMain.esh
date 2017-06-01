@@ -1,0 +1,9 @@
+load simple-test
+load newMain.o
+
+reladd 1 2
+reladd 1 2
+
+save simple-test-newMain
+
+exit
