@@ -3,7 +3,8 @@ A tool to enable in memory fuzzing of ELF binaries.  Currently in development an
 
 ![fuzzy-probe](/images/fuzzy-probe.png?raw=true)
 
-Sometimes you want to fuzz a small portion of a process.  With this tool you will be able to run a piece of a program in a specific process state and mutate a portion of the memory.  This tool modifies a given binary so it will only run the specified portion.  It will mutate the section of memory based on a file it reads from stdin.  This can be useful for file based fuzzing tools like American Fuzzy Lop.
+Fuzzy-probe will be a tool to enable in memory fuzzing of a binary.  This will allow a user to specify a section of code that they wish to run as if were in the middle of a running process.  This will be useful for testing software where the source code is not available, and emulation is difficult. As an example, many embedded programs get in a processing loop where information is continously read off a bus and the processed.  With fuzzy probe, the user could jump into the process right after the message was read off the bus and fuzz the messages and the potential states of the process. The user will specify the initial state, mutable memory, and the section to fuzz.  With this, fuzzy probe will create a new program that sets up  the process and jumps to the section under test.  After executing the section, post-conditions can be tested.  There are other similar tools available, but Fuzzy-probe will have more features and be compatible with American Fuzzy Lop (an excellent open-source fuzzing library)
+
 
 # Getting started
 
