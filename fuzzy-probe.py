@@ -4,35 +4,49 @@ import argparse
 import os
 import string
 
+from xml.etree import ElementTree
+
+from preconditionhandler import *
+
 parser = argparse.ArgumentParser(description='fuzzy-probe is a tool to enable in memory fuzzing of ELF files') 
 parser.add_argument('binary_to_fuzz', type=str, help='the binary to fuzz')
-parser.add_argument('section_start', type=str, help='the address of the start of the section to fuzz')
-parser.add_argument('section_end', type=str, help='the address of the end of the section to fuzz')
-parser.add_argument('mutable_start', type=str, help='the address of the start of memory to fuzz (this will be more complicated later)')
-parser.add_argument('mutable_size', type=int, help='the length of the section of memory to fuzz in bytes')
+parser.add_argument('config_file', type=str, help='A config file describing the section to fuzz and the pre/post conditions', default='config.xml')
 parser.add_argument('--output', type=str, help='output file', default="a.out")
 
+# TODO: move this to a seperate file
 new_main_text = '''
 #include <unistd.h>
 
 void *section_start = $section_start;
-char *mutable_start = $mutable_start;
-size_t mutable_size = $mutable_size;
+static void *working_pointer;
 
-int new_main(int argc, char **argv){
-  //read input file into mutable memory (test)
-  read(STDIN_FILENO, mutable_start, mutable_size);
-  printf("in_new");
+typedef struct{
+  char someVar[1000];
+} big_stack_struct;
 
+void setupAndJump(big_stack_struct bigStruct){
+  //we pass a large struct to the stack so we can work with most parameters
+
+  char stack_base_minus13; //allocate a variable, so we can know our stack base.  This is a actually stack_base - 13 due to other values on the stack (ESI, ESX, EDI)
+
+  $pre_conditions
 
   //gcc specific
   goto *section_start;
-  return 42;
+  exit(42); //this should never get called
+}  
+
+
+int new_main(int argc, char **argv){
+  big_stack_struct bigStackStruct;
+  setupAndJump(bigStackStruct);
+
+  return 0;
 }
 
 int end_check(){
-  //TODO: check for end conditions here
-  printf("in_end_check");
+  $post_conditions
+  
   exit(0);
 }
 
@@ -58,10 +72,10 @@ s $section_end
 wa call `afl~end_check[0]`
 '''
 
-def createNewMain(section_start, mutable_start, mutable_size):
+def  createNewMain(section_start, pre_conditions, post_conditions):
   text = string.Template(new_main_text)
   with open('newMain.c', 'w') as text_file:
-    text_file.write(text.substitute(section_start=section_start, mutable_start=mutable_start, mutable_size=mutable_size))
+    text_file.write(text.substitute(section_start=section_start, pre_conditions=pre_conditions, post_conditions=post_conditions))
 
 def compileNewMain():
   os.system('gcc -m32 -c -O0 -o newMain.o newMain.c')
@@ -85,10 +99,21 @@ def cleanup():
 
 def main():
   args = parser.parse_args()
-  createNewMain(args.section_start, args.mutable_start, args.mutable_size)
+ 
+  # TODO: nice errors for bad config file
+  e = ElementTree.parse(args.config_file)
+  section_start = e.find('./section_start').text
+  section_end = e.find('./section_end').text
+
+  pre_conditions = get_cpp_preconditions(e.find('./pre_conditions'))
+
+  # post_conditions = createPostConditions(args.config_file)
+  post_conditions = ""
+
+  createNewMain(section_start, pre_conditions, post_conditions)
   compileNewMain()
   injectNewMain(args.binary_to_fuzz, args.output)
-  addJumpAtEndOfSection(args.section_end)
+  addJumpAtEndOfSection(section_end)
 
 if __name__ == "__main__":
   main()

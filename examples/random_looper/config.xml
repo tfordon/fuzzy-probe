@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<config>
+  <section_start>0x080488ee</section_start>
+  <section_end>  0x08048a32</section_end>
+
+  <pre_conditions>
+    <!-- next waypoint name -->
+    <pre_condition condition="mutable" type="char" size="10">
+      <location type="static">0x804a0f4</location>
+    </pre_condition>
+
+    <!--previous latitude-->
+    <pre_condition condition="mutable" type="float">
+      <location type="static">0x0804a10c</location>
+    </pre_condition>
+
+    <!--previous longitude-->
+    <pre_condition condition="mutable" type="float">
+      <location type="static">0x0804a110</location>
+    </pre_condition>
+
+    <!--latitude-->
+    <pre_condition condition="mutable" type="float">
+      <location type="stack-offset">0x8</location>
+    </pre_condition>
+
+    <!--longitude-->
+    <pre_condition condition="mutable" type="float">
+      <location type="stack-offset">0xc</location>
+    </pre_condition>
+
+  </pre_conditions>
+
+  <post_conditions>
+  </post_conditions>
+
+</config>
