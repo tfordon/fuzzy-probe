@@ -11,6 +11,11 @@ void *section_start = $section_start;
 $static_vars
 
 int new_main(int argc, char **argv){
+  //determine what where the stack and frame pointer are
+  void *esp, *ebp;
+  asm("mov %esp, esp");
+  asm("mov %ebp, ebp");
+
   $pre_conditions
 
   goto *section_start;
@@ -98,6 +103,17 @@ class Fuzzyprobe(object):
         pass
 
     def instrument(self, folder_name="output", modified_file_name="binToTest"):
+        """instrument a binary and a default input file
+
+        This method injects new code into a binary based on the function calls so far
+
+        Parameters
+        ----------
+        folder_name : str
+            Where the new binary should be placed
+        modified_file_name : str
+            The name of the new binary
+        """
 
         try:
             os.makedirs(folder_name + '/testcase_dir')
@@ -109,8 +125,6 @@ class Fuzzyprobe(object):
 
         path_to_new_binary = folder_name + '/' + modified_file_name
         copyfile(self.path_to_binary, path_to_new_binary)
-        # create a new binary based on the old
-        # create a new object file based on pre/post conditions
         self._create_cpp_file()
         self._compile_cpp_file()
         self._inject_object_into_binary(path_to_new_binary)
@@ -119,35 +133,57 @@ class Fuzzyprobe(object):
         # self._delete_intermediate_files()
         pass
 
-    def create_local_stack(self, frame_pointer_offset, stack_offset, total_size=2**12, readonly=False):
-        if self.local_stack_created:
-            raise 'Can only call create_local_stack once'
-        self.local_stack_created = True
-
-        self.pre_conditions += "void *mmap_ptr, *esp, *ebp;\n"
-
-        if readonly:
-            prot_str = "PROT_READ"
-        else:
-            prot_str = "PROT_READ | PROT_WRITE"
-
-        self.pre_conditions += "mmap_ptr = mmap(0, %s, %s, MAP_PRIVATE | MAP_ANONYMOUS, -1, %s);\n" % (total_size, prot_str, total_size);
-        self.pre_conditions += "mmap_ptr = mmap(0, %s, %s, MAP_PRIVATE | MAP_ANONYMOUS, -1, %s);\n" % (total_size, prot_str, total_size);
-
-        self.pre_conditions += "esp = mmap_ptr + %s - %s;\n" % (total_size, stack_offset)
-        self.pre_conditions += "ebp = mmap_ptr + %s - %s;\n" % (total_size, frame_pointer_offset)
-
-        self.pre_conditions += "asm(\"mov esp, %esp\");\n"
-        self.pre_conditions += "asm(\"mov ebp, %ebp\");\n"
-
-        self.frame_pointer_address = 'ebp';
-
     def dynamically_allocate(self, size_in_bytes=100):
+        """ dynamically allocates a new section of memory in the new binary
+
+        At runtime, allocates a new portion of memory on the heap and returns a pointer to the area
+
+        Parameters
+        ----------
+        size_in_bytes : int
+            The number of bytes to allocate
+
+        Returns
+        ---------
+        str
+            The name of the new variable
+        """
         self.var_num += 1
         var_name = 'genVar%i' % var_num
         self.static_vars += 'static char * %s;\n' % var_name
         self.pre_conditions += '    %s = malloc(%i);\n' % (var_name, size_in_bytes)
         return var_name
+
+    def set_fixed_bytes(self, location, values):
+        """sets bytes at a given location
+
+        Parameters
+        ---------
+        location : str
+            The location to write.  This can be a fixed location (e.g. 0x40000), or based on a variable (e.g. "esp - 0x10)
+        values : bytearray
+            An array of bytes to copy
+        """
+        if not isinstance(values, bytearray):
+            raise Exception("Usage set_fixed_bytes(location(string), values(bytearray))")
+        for idx, value in enumerate(values):
+            self.pre_conditions += '    *(char*)(%s+%s) = %s;\n' % (location, idx, value)
+
+    def read_raw(self, location, size_in_bytes):
+        """sets bytes in a given location based on stdin
+
+        Reads from stdin and writes to a given location
+
+        Parameters
+        ----------
+        location : str
+            The location to write.  This can be a fixed location (e.g. 0x40000), or based on a variable (e.g. "esp - 0x10)
+        size_in_bytes : int
+        """
+        self.pre_conditions += '    read(STDIN_FILENO, %s, %s);\n' % (location, size_in_bytes)
+        self.input_bytes += bytearray([0] * size_in_bytes)
+
+    # Now some syntactic sugar to make the above methods easier
 
     def set_fixed_int32(self, location, value):
         self.pre_conditions += '    *(int32_t*)(%s) = %s;\n' % (location, value)
@@ -155,7 +191,7 @@ class Fuzzyprobe(object):
     def set_fixed_address(self, location, value):
         self.pre_conditions += '    *(void*)(%s) = %s;\n' % (location, value)
 
-    def read_raw(self, location, size_in_bytes):
-        self.pre_conditions += '    read(STDIN_FILENO, %s, %s);\n' % (location, size_in_bytes)
-        self.input_bytes += bytearray([0] * size_in_bytes)
-        
+    # Not implemented yet
+    def read_proto_buf(self, location, rpc_spec):
+        raise NotImplemented()
+
