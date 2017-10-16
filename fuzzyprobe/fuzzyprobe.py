@@ -8,11 +8,15 @@ _new_main_text = '''
 #include <unistd.h>
 
 void *section_start = $section_start;
+void *esp, *ebp;
 $static_vars
 
 int new_main(int argc, char **argv){
-  //determine what where the stack and frame pointer are
-  void *esp, *ebp;
+  //adjust stack before setting pre-conditions
+  asm("mov ebp, esp");
+  asm("sub esp, $stack_size");
+  
+  //determine where the stack and frame pointer are
   asm("mov %esp, esp");
   asm("mov %ebp, ebp");
 
@@ -57,6 +61,7 @@ class Fuzzyprobe(object):
         self.start_address = start_address
         self.end_addresses = []
         self.var_num = 0
+        self.stack_size = 20
         self.input_bytes = bytearray()
         if end_address is not None:
             self.end_addresses.append(end_address)
@@ -70,6 +75,7 @@ class Fuzzyprobe(object):
             text_file.write(text.substitute(
                 static_vars = self.static_vars,
                 section_start = self.start_address,
+                stack_size = self.stack_size,
                 pre_conditions = self.pre_conditions,
                 post_conditions=self.post_conditions))
 
@@ -182,6 +188,9 @@ class Fuzzyprobe(object):
         """
         self.pre_conditions += '    read(STDIN_FILENO, %s, %s);\n' % (location, size_in_bytes)
         self.input_bytes += bytearray([0] * size_in_bytes)
+
+    def set_stack_size(self, stack_size):
+        self.stack_size = stack_size
 
     # Now some syntactic sugar to make the above methods easier
 
