@@ -12,13 +12,22 @@ void *esp, *ebp;
 $static_vars
 
 int new_main(int argc, char **argv){
+  //make this easier to spot
+  asm("nop");
+  asm("nop");
+  asm("nop");
+
   //adjust stack before setting pre-conditions
-  asm("mov ebp, esp");
-  asm("sub esp, $stack_size");
+  asm("mov %esp, %ebp");
+  asm("sub $$$stack_size, %esp");
   
   //determine where the stack and frame pointer are
   asm("mov %esp, esp");
   asm("mov %ebp, ebp");
+
+  asm("nop");
+  asm("nop");
+  asm("nop");
 
   $pre_conditions
 
@@ -80,7 +89,7 @@ class Fuzzyprobe(object):
                 post_conditions=self.post_conditions))
 
     def _compile_cpp_file(self):
-        os.system('gcc -m32 -c -O0 -o _newMain.o _newMain.c')
+        os.system('gcc -m32 -c -O0 -static -o _newMain.o _newMain.c')
         pass
 
     def _inject_object_into_binary(self, new_binary_name):
@@ -96,6 +105,7 @@ class Fuzzyprobe(object):
         with open('_radare_script', 'w') as text_file:
             text_file.write(radare_script)
         os.system('radare2 -q -i _radare_script w %s' % path_to_new_binary )
+        os.system('chmod a+x %s' % path_to_new_binary )
 
     def _create_sample_input(self, initial_input_path):
         with open(initial_input_path, 'wb') as input_file:
@@ -155,7 +165,7 @@ class Fuzzyprobe(object):
             The name of the new variable
         """
         self.var_num += 1
-        var_name = 'genVar%i' % var_num
+        var_name = 'genVar%i' % self.var_num
         self.static_vars += 'static char * %s;\n' % var_name
         self.pre_conditions += '    %s = malloc(%i);\n' % (var_name, size_in_bytes)
         return var_name
@@ -198,7 +208,7 @@ class Fuzzyprobe(object):
         self.pre_conditions += '    *(int32_t*)(%s) = %s;\n' % (location, value)
 
     def set_fixed_address(self, location, value):
-        self.pre_conditions += '    *(void*)(%s) = %s;\n' % (location, value)
+        self.pre_conditions += '    *((void**)(%s)) = %s;\n' % (location, value)
 
     # Not implemented yet
     def read_proto_buf(self, location, rpc_spec):

@@ -71,7 +71,7 @@ int main(int argc, char **argv){
 
 
 
-
+/*
 int dummy(){
   read(0,0,0);
   printf("hello");
@@ -79,3 +79,4 @@ int dummy(){
   exit(0);
   return 0;
 }
+*/
