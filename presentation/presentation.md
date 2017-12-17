@@ -2,6 +2,8 @@ class: center, middle
 
 # Binary Patching for Section Fuzzing #
 
+<i> MS Cyber Security Capstone Project </i>
+
 ------------------------
 
 Thomas Fordon
@@ -22,9 +24,13 @@ Thomas Fordon
 ## Outline ##
 
 * Problem 
-* Example
+* Demonstration
+* Promblem Discussion
+* Background
+    * Fuzzing
+    * Constraint Solving
 * Approach
-* Potential Usage
+* Results
 * Future Development
 * Conclusion
 
@@ -65,7 +71,6 @@ Cons:
 * Black Box Fuzzing
 
 ---
----
 
 ## What the solution looks like ##
 
@@ -87,7 +92,11 @@ Let's jump in with a quick demo.  Here's what I'll be showing:
 * Instrumentaion should be agnostic to the testing methodology
     * Works with fuzzing and constraint solving
 
-TODO image from github showing data-flow
+---
+
+class: center, middle
+
+<img src="/images/process_overview.png"  height="400">
 
 ---
 
@@ -145,6 +154,35 @@ A bug that can be exploited to achive a security related goal.
 
 ---
 
+class: center, middle
+
+# Fuzzing #
+
+'''
+... an automated software testing technique that involves providing invalid, unexpected, or random data as inputs to a computer program.
+'''
+
+<i>https://en.wikipedia.org/wiki/Fuzzing</i>
+
+---
+
+## Types of Fuzzing ##
+
+* Black Box - no knowlege of program internals.
+* White Box - total knowlege of program intenternals.
+    * Used for symbolic execution constraint solving
+* Grey Box - Coverage/Execution knowledge
+    * Used in evolutionary fuzzing 
+
+------------------------------
+
+* Smart/Dumb - Does/Doesn't know about the underlying data structure
+* Mutational/Generative - Does the fuzzer modify an existing template, or generate the input whole cloth 
+* Evolutionary - Uses genetic algorithms an a set of inputs to search the solution space
+* In memory - Modifies a running process
+
+---
+
 ## Fuzzing the system state ##
 
 Don't just fuzz the inputs.  Fuzz valid system states.
@@ -180,34 +218,11 @@ I think it would allow the analyst to:
     * Run a fuzz test using the pre/post conditions.
     * If the test fails, either the assumptions were bad, or a bug exists.
 
----
-
-class: center, middle
-
-# Fuzzing #
-
-TODO: move above system state fuzzing
-
----
-
-## Types of Fuzzing ##
-
-* Black Box - no knowlege of program internals.
-* White Box - total knowlege of program intenternals.
-    * Used for symbolic execution constraint solving
-* Grey Box - Coverage/Execution knowledge
-    * Used in evolutionary fuzzing 
-
-------------------------------
-
-* Smart/Dumb - Does/Doesn't know about the underlying data structure
-* Mutational/Generative - Does the fuzzer modify an existing template, or generate the input whole cloth 
-* Evolutionary - Uses genetic algorithms an a set of inputs to search the solution space
-* In memory - Modifies a running process
 
 ---
 
 ## AFL ##
+
 
 * State of the art
 * Works with QEMU
@@ -220,7 +235,11 @@ TODO: move above system state fuzzing
 
 ## AFL - How does it work
 
-TODO: image of code execution path from report
+<img src="/images/afl_edge_counts.png"  height="500">
+
+---
+
+## AFL code ##
 
 ```
 location = <compiler_time_random>;
@@ -268,7 +287,7 @@ if(b > 20){
 
 ## Code to Inject ##
 
-TODO: image of injected code calling target and returning to end
+<img src="/images/instrumented_segments.png"  height="300">
 
 * New main()
     * Set up the stack frame
@@ -281,8 +300,6 @@ TODO: image of injected code calling target and returning to end
 
 ## Injection Method ##
 
-TODO: images from the injection portion of the report
-
 * Compile the new code to a relocatable object file (ET\_REL ELF32)
 * Use elfsh to load target binary and inject the object file
     * Leave most of the extend the code segment and the data segment.
@@ -294,11 +311,27 @@ TODO: images from the injection portion of the report
 
 ---
 
+class: center, middle
+
+## ELF Section Mapping ##
+
+<img src="/images/elf_section_mapping.png"  height="400">
+
+---
+
+class: center, middle
+
+## ELF Injection ##
+
+<img src="/images/elf_injection.png"  height="400">
+
+---
+
+class: center, middle
+
 ## New ELF File ##
 
-TODO: image from report (overall structure of instrumented binary)
-
-* Can not add new symbols or library dependencies
+<img src="/images/instrumented_segments.png"  height="400">
 
 ---
 
@@ -329,7 +362,27 @@ TODO: image from report (overall structure of instrumented binary)
 
 ---
 
-## Conclusion ##
+# Conclusion #
 
+* I presented a tool that enables section fuzzing
+* Enabled through binary patching
+* Presented tool is agnostic to the tool used for fuzzing or constraint solving 
+* Injecting into an ELF executable is problematic
+
+---
+
+# Questions? # 
+
+---
+
+---
+
+# Demo of report and slide creation #
+
+* Report and slides are all represented in markdown
+* Markdown is a markup language that is intentionally easy to read
+    * I found it easier to work with than LaTeX
+* Report does markdown -> LaTeX -> pdf
+* Slideshow uses reveal.js to load into a webpage
 
 

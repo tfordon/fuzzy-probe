@@ -15,7 +15,7 @@ abstract: |
   This is important because it will allow a user to quickly test portions of a binary when it is difficult to emulate the entire system.
   This has practical applications for embedded systems testing and reverse engineering in general.
 
-  Embedded systems will be easier to fuzz since the control logic without having to emulate the I/O of the system.
+  Embedded systems will be easier to fuzz without having to emulate the I/O of the system.
   Additionally, the state of the system can be tested without needing a long running process.
  
   This tool will allow a reverse engineer to break their work into smaller pieces. 
@@ -36,7 +36,7 @@ This work is an extension of work done in a previous class [@fordon2016]
 
 I want to do something very similar to in-memory fuzzing.
 I want to be able to describe the expected behavior of the system as well as the expected process state.
-Additionally, I want to only test the control logic of the binary under test.
+Additionally, I want to only test the control logic of the target system.
 These systems can be difficult to emulate since the binary will interact with other components via memory mapped I/O.
 Being able to test only a small section of the program would be especially useful for embedded systems.
 
@@ -47,12 +47,12 @@ conditions that are expected for this portion of code.
 I then instrument a new binary that tests the possible process states that meet the preconditions.
 Each test confirms that the post-conditions are met and that the program does not crash or hang.
 
-By properly describing the pre-conditions and post-conditions for a given portion of the code, we can create all valid process states.
-We then instrument a binary to enable the testing of these process states and the expected behavior as described by post-conditions.
+By properly describing the pre-conditions and post-conditions for a given portion of the code, I create all valid process states.
+I then instrument a binary to enable the testing of these process states and the expected behavior as described by post-conditions.
 
 The instrumented binary will make it easier to leverage existing fuzzing tools.
 The new binary will set the memory to a valid pre-condition state based on stdin.
-Different stdin values will lead to different, but valid pre-condition, process states.
+Different stdin values will lead to different, but still valid pre-condition, process states.
 After running to the end of the designated section, post-conditions are validated.
 
 By using stdin to set process-state, we can leverage existing fuzzing tools.
@@ -67,16 +67,16 @@ This approach has several advantages:
 * Smaller tests are generally faster.
 
 This method requires some reverse engineering of the binary to find a section that may contain vulnerabilities.
-The the user must determine what the possible initial/end state are.
+The user must determine what the possible initial/end state are.
 This cannot be used by a non-expert user.
-However, this paper will argue that the reverse engineering is required to perform a meaningful discovery of vulnerabilities.
+However, this paper argues that the reverse engineering is required to perform a meaningful discovery of vulnerabilities.
 Locating bugs requires the user to first define the expected behavior of a system.
 When the system behaves out of spec, there is the potential for a vulnerability.
 Without knowing the spec, discovering vulnerabilities is not possible.
 
 This tool is also useful in that it allows a reverse engineer to test their assumptions.
 As the RE is performing their analysis, they are creating mental models for how the program should behave.
-This tool allows the RE to specify these assumptions and then test them.
+This tool allows the RE to put these assumptions into code and then test them.
 
 # Background #
 
@@ -92,9 +92,9 @@ Generational is often referred to as "smart fuzzing" and Mutational as "dumb fuz
 This is because generational fuzzing needs to know the structure of what it is fuzzing.
 
 Mutational fuzzing is less directed and not tailored to a specific program.
-For these reasons mutation based fuzzing is easier to begin with, but generally less effective at locating errors<!--[@citationNeeded]-->.
+For these reasons mutation based fuzzing is easier to begin with, but generally less effective at locating errors.
 This is due to the large number of completely invalid inputs.
-Generational fuzzing tools know what structures are expected, and can thus fuzz closer to the boundaries of expected behavior where more errors are likedly to occur<!--[@citationNeeded]-->.
+Generational fuzzing tools know what structures are expected, and can thus fuzz closer to the boundaries of expected behavior where more errors are likely to occur.
 However, mutational fuzzers can find bugs that the generational may not [@demott2007]
 
 
@@ -104,7 +104,7 @@ There are two primary types of coverage: statement and branch.
 Statement coverage is the percentage of executable statements that have been executed.
 Branch coverage is the percentage of branch paths that have been executed
 
-![Example control flow graph for a simple factorial function \label{figCFG}](images/cfg.png){height=50%}
+![Example control flow graph for a simple factorial function 2 \label{figCFG}](images/cfg.png){height=25%}
 
 Figure \ref{figCFG} is an example control flow graph (CFG) for a program.
 The control flow graph represents all the possible paths of execution for a binary.
@@ -120,20 +120,20 @@ However, coverage is still useful in discussing the effectiveness of fuzzing.
 
 Another important distinction is if the fuzzer is aware of the programs structure and/or the coverage during the execution.
 Depending on the fuzzers awareness it is either: white-box, black-box, or grey-box.
-If the fuzzing tool is unaware of both the program structure and coverage, it is considered a black-box fuzzer<!--[@citationNeeded]-->
-White-box fuzzers are aware of the program structure and can perform analysis to determine inputs that will better exercise the program<!--[@citationNeeded]-->.
-Grey-box fuzzers are not aware of the program structure, but do have knowledge of coverage<!--[@citationNeeded]-->.
+If the fuzzing tool is unaware of both the program structure and coverage, it is a black-box fuzzer
+White-box fuzzers are aware of the program structure and can perform analysis to determine inputs that will better exercise the program.
+Grey-box fuzzers are not aware of the program structure, but do have knowledge of coverage.
 
 Each fuzzing technique has its merits.
 Black-box fuzzing is the simplest since it does not need to know details on what it is fuzzing.
-This usually allow very fast execution, but does not lead to interesting code paths since it is not aware that paths even exist<!--[@citationNeeded]-->.
-Whitebox fuzzing can find new code paths through semantic execution, but this can be much slower than black-box testing<!--[@citationNeeded]-->.
+This usually allow very fast execution, but does not lead to interesting code paths since it is not aware that paths even exist.
+Whitebox fuzzing can find new code paths through semantic execution, but this can be much slower than black-box testing.
 Gray-box fuzzing is fairly efficient compared to black-box, but still cannot find the deep code paths that white box testing can discover.
-For these reasons, there have been many projects that combine the advantages of white-box fuzzing with either black-box or gray box <!--[@citationNeeded] [@citationNeeded]-->.
+For these reasons, there have been many projects that combine the advantages of white-box fuzzing with either black-box or gray box.
 
 ### In-memory Fuzzing ###
 
-In memory fuzzing takes a running process and fuzzes portions of the process state<!--[@citationNeeded]-->.
+In memory fuzzing takes a running process and fuzzes portions of the process state.
 The fuzzing tool forks the process under test and then mutates a portion of memory.
 Each permutation of process state is then executed.
 This allows a user to designate sections of memory that could change, and run the same section of code through many iterations.
@@ -151,7 +151,7 @@ By allowing the analyst low level access, they can test just the portion of the 
 
 In memory fuzzing is only really useful to somebody with a reverse engineering background.
 In order to use in-memory fuzzing, the user must have an understanding of how the program is working and what variables are in use.
-Due to this, in-memory fuzzing has not gained wide-spread adoption<!--[@citationNeeded]-->.
+Due to this, in-memory fuzzing has not gained wide-spread adoption.
 
 ### Evolutionary Fuzzing ###
 
@@ -173,13 +173,13 @@ EFS was able to prove that an evolutionary mutation based fuzzer could "discover
 Without prior knowledge of the inputs structure, they could effectively test complex inputs.
 This was useful since it allowed better testing of programs were the source code was not available without reverse engineering.
 
-Since EFS, there have been many other mutation based fuzzing tools <!--[@citationNeeded] [ @citationNeeded]-->.
+Since EFS, there have been many other mutation based fuzzing tools.
 In recent years, American Fuzzy lop has gained particular popularity due to its practical approach and being open source.
 
 
 #### American Fuzzy Lop ###
 
-American Fuzzy Lop (AFL) is an evolutionary mutational fuzzing tool <!--[@citationNeeded]--> that works with programs that use a single input file.
+American Fuzzy Lop (AFL) is an evolutionary mutational fuzzing tool [@zalewski] that works with programs that use a single input file.
 AFL maintains a set of inputs that it mutates and evaluates.
 AFL mutates an input, invokes the program under test with the mutated input, and evaluates coverage.
 AFL then uses the coverage as a fitness test to determine if the new input should be kept in the candidate pool.
@@ -244,7 +244,7 @@ For this reason, it is often useful to perform symbolic execution on one code pa
 This is known as concolic (concrete-symbolic) execution.
 Concolic execution takes a particular code path and attempts to perform symbolic execution and constraint solving on a recent branch.
 
-Many tools combine symbolic execution with fuzz testing <!--[@citationNeeded] [@citationNeeded]-->.
+Many tools combine symbolic execution with fuzz testing [@guido2017].
 Driller uses a stuck heuristic by letting AFL run until it stops finding new inputs.
 Then Driller attempts to perform constraint solving to discover new code paths.
 If new code paths are discovered, they are added to the AFL inputs and the fuzzing continues again.
@@ -311,7 +311,7 @@ Specifically, this can only find inputs that cause extreme behavior (like a cras
 Additionally, real hardware can be expensive and this manner of testing does not scale well.
 
 I wanted to be able to fuzz these systems in an emulated environment.
-There is a great deal of work on fuzzing embedded systems <!--[@citationNeeded] [@citationNeeded]-->.
+There is a great deal of work on fuzzing embedded systems.
 The popular approach is to emulate the system and then fuzz the inputs with different inputs.
 This is essentially the same approach as outlined above, except with an emulated system instead of a real system.
 Emulating the system reduces the hardware costs and allows scaling.
@@ -340,7 +340,7 @@ Without this, you are looking for only the grossest of errors.
 Before continuing, some definitions are in order:
 
 * A bug is when a program does not behave to specification.
-* A vulnerability is a bug that can be exploited to achieve a security related goal <!--[@citationNeeded]-->
+* A vulnerability is a bug that can be exploited to achieve a security related goal
 
 The specification is how the program should behave.
 Preferably, this is defined by a formal spec or a contract.
@@ -361,7 +361,7 @@ By doing this, the RE has a better understanding of what they are looking for.
 You can't find a "bug" if you can't define it.
 
 In reality, this is an iterative process.
-As the RE explores a program, they develop a model of how portions of the program should behave<!--[@citationNeeded]-->.
+As the RE explores a program, they develop a model of how portions of the program should behave.
 They discover what assumptions the developer made.
 By viewing the program from an aggressive standpoint they also have models of where these assumptions may be incorrect.
 As an example, the original programmer may have assumed a character-array input would be no more that 100 characters.
@@ -379,12 +379,12 @@ The RE determines these through normal reverse engineering.
 
 ![Allowed versus expected behavior \label{figInputsVenn}](images/inputs_venn.png){height=25%}
 
-Figure \ref{figInputsVen} illustrates allowed versus expected behavior.
+Figure \ref{figInputsVenn} illustrates allowed versus expected behavior.
 Many security errors occur near the boundaries of expected behavior.
 The programmer may not have properly tested, or made faulty assumptions about the potential inputs.
 Perhaps the program will operate to spec as long as the inputs are "valid", but the calling code can provide inputs that are not to spec.
 Usually, developers are not writing to a formal specification and the programmer/caller each have an idea of the expected behavior.
-Without a formal specification the programmer vs caller assumptions are likely to vary andn create space for bugs/vulnerabilities.
+Without a formal specification the programmer vs caller assumptions are likely to vary and create space for bugs/vulnerabilities.
 
 This project began as an attempt to enable easier fuzzing of embedded avionics systems.
 The focus has shifted to fuzzing of specifications for portions of binaries.
@@ -419,7 +419,7 @@ First, I will compile the program in order to create a target we can perform RE 
 I'll leave symbols in to make the output from radare2 easier to read.
 The following is a view from radare2, a popular reverse engineering tool.
 
-![Binary analysis of the main fuction using radare2 \label{figExample1Rad}](images/example1_radare_main.png){height=75%}
+![Binary analysis of the main function using radare2 \label{figExample1Rad}](images/example1_radare_main.png){height=75%}
 
 By reverse engineering the binary (See Figure. \ref{figExample1Rad}), I can determine several things:
 
@@ -427,10 +427,10 @@ By reverse engineering the binary (See Figure. \ref{figExample1Rad}), I can dete
 * The locations for the input latitude and longitude are (ebp-0x10) and (ebp-0x14) respectively.
 * The start/end locations of the section to test, as commented in the original source code, are 0x080487ee and 0x080487fc
 
-![Instrumetation script.  This script invokes the instrumentation tool (fuzzyprobe) with the defined parameters \label{figExample1Instrumentation}](images/example1_instrumentation_script.png){height=50%}
+![Instrumentation script.  This script invokes the instrumentation tool (fuzzyprobe) with the defined parameters \label{figExample1Instrumentation}](images/example1_instrumentation_script.png){height=50%}
 
 With the reverse engineering knowledge I can use my project's tool (fuzzyprobe) to create a new binary.
-Figure \ref{figExample1Instrumenntation} shows a script that invokes the instrumentation tool.
+Figure \ref{figExample1Instrumentation} shows a script that invokes the instrumentation tool.
 The instrumented binary does the following:
 
 1. Reads 4 bytes and stores them to the initial latitude.
@@ -505,13 +505,13 @@ This memory is the simplest to instrument, but the address must be known at comp
 A user needs to locate this memory as well as the bounds of the section under test.
 After this it is straightforward to set fixed values and define mutable areas.
 
-![Instrumetation script for simple binary where only static memory is instrumented.  This script invokes the tool (fuzzyprobe) with the defined parameters \label{figExample2Instrumentation}](images/example2_instrumentation_script.png){height=50%}
+![Instrumentation script for simple binary where only static memory is instrumented.  This script invokes the tool (fuzzyprobe) with the defined parameters \label{figExample2Instrumentation}](images/example2_instrumentation_script.png){height=50%}
 
 In Figure \ref{figExample2Instrumentation}, I load a binary, set some fixed values, and denote that other values are mutable.
 Finally, I tell the tool to create an instrumented binary.
 When the instrumented program runs, it will set any fixed values we have specified and then populate the mutable areas with values from stdin.
 
-![Generated code that will be injected into the target binary.  This example reads a fixed size array from stdin into a static address. \label{figExample2Instrumentation}](images/example2_generated_code.png){height=50%}
+![Generated code that will be injected into the target binary.  This example reads a fixed size array from stdin into a static address. \label{example2GeneratedCode}](images/example2_generated_code.png){height=50%}
 
 
 Figure \ref{example2GeneratedCode} shows the generated C code that will be injected into the target binary.
@@ -534,8 +534,6 @@ Doing this in my tool will create a new variable in the generated source and ret
 At runtime, this variable will refer to the allocated memory on the heap.
 This variable can be referenced to write fixed values as well as denote mutable memory
 
-<!-- TODO: add a code listing with stack and heap memory -->
-
 ## Instrumenting the Binary ##
 
 Once the instrumentation code is generated, it needs to be injected into the original binary.
@@ -551,12 +549,12 @@ Another function is also added to check post conditions.
 
 ![Instrumented segments.  The segment has been extended to store new functions.  Meanwhile the old segment has been slightly modified to return to an end\_check function.  \label{figInstrumentedSegments}](images/instrumented_segments.png){height=50%}
 
-In addition to creating an instrumented binary, a default input file is also created \ref{figProcessOverview.png}.
+In addition to creating an instrumented binary, a default input file is also created \ref{figProcessOverview}.
 This input file is a seed input that tools like AFL can use to begin fuzzing.
 The file is filled with zeros and is exactly as long as the expected input.
 
 The instrumented binary has been modified using the ERESI method describe previously.
-New sections were added to the beinging of the executable segment and the end of the data segment.
+New sections were added to the beginning of the executable segment and the end of the data segment.
 The PLT was modified to redirect main to injected main.
 
 There is a problem with injecting into binaries that do not have the glibc symbols "malloc" and "read".
@@ -589,10 +587,10 @@ Phrack #66 [@pancake2009] has an excellent article on "manual binary mangling wi
 
 This project's API was influenced by the Manticore constraint solver from BitTrail [@manticore].
 Manticore perform constraint solving by defining hooks to entry/exit points and defining system constraints.
-The cpu is emulated using unicorn and the system is symbolically executed.
+The CPU is emulated using unicorn and the system is symbolically executed.
 When an exit hook is encountered in execution, Manticore attempts to solve the constraints on the symbols.
 
-My project has a similar interface due to the similarities in fuction.
+My project has a similar interface due to the similarities in function.
 The constraints can be viewed as pre-conditions and post-conditions and Manticore sets these constraints on process memory (as well as registers).
 However, Manticore is solving a different problem; They are finding a specific set of inputs that solve a given set of constraints.
 My project aims to find inputs that violate the constraints through fuzzing.
@@ -602,9 +600,9 @@ My project aims to find inputs that violate the constraints through fuzzing.
 In memory fuzzing takes a running process and performs mutations on the processes memory.
 The process is repeatedly forked before being manipulated.
 In memory fuzzing has similar advantages to the section fuzzing of this project.
-In memory fuzzing allows you to bypass areas that would make fuzzing difficult like network connection limititations [@corelan2010].
+In memory fuzzing allows you to bypass areas that would make fuzzing difficult like network connection limitations [@corelan2010].
 
-In memory fuzzing also requires understanding the underlying code through reverse engineeering.
+In memory fuzzing also requires understanding the underlying code through reverse engineering.
 Corelan produced a set of tools "Tracer.py" and "InMemoryFuzzer.py" to ease the amount of reverse engineering required.
 The tool is very usable, but uses its own mutation engine and did not seem like it would be easily extended for emulation.
 Additionally, you need to attach to a running process and add breakpoint hooks.
@@ -685,7 +683,7 @@ The developer may have assumed a condition would not change, but an aggressor co
 
 This should be achievable by making the code self modifying.
 The instrumented binary would only execute one instruction of the section under test before returning to a control loop.
-The actual section under test could be modified before each instruction call to orchastrate this.
+The actual section under test could be modified before each instruction call to orchestrate this.
 The major drawback of this approach is that it would execute much slower. 
 
 ## Function Mocking ##
@@ -702,7 +700,7 @@ The mock function should be programmable and allow the analyst the ability to fa
 
 <i>Thank you Katy for your unending patience and support.</i>
 
-<i>Thank you Dr. Mateti for your thoughtfull advice and encouragement.</i>
+<i>Thank you Dr. Mateti for your thoughtful advice and encouragement.</i>
 
 # References
 
